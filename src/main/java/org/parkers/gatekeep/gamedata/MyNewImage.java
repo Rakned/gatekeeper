@@ -40,9 +40,7 @@ class MyNewImage {
         }
         return null;
     }
-
-
-    MyNewImage(String fileName, InputStream imageInput) throws IOException {
+    private MyNewImage(String fileName, InputStream imageInput) throws IOException {
         name = fileName;
         extension = fileName.substring(fileName.lastIndexOf('.') + 1);
 
@@ -77,9 +75,9 @@ class MyNewImage {
         th = maxLength;
 
         if (w > h)
-            th = getResize(tw, w, h);
+            th = resizeFactor(tw, w, h);
         else if (w < h)
-            tw = getResize(th, h, w);
+            tw = resizeFactor(th, h, w);
 
         MyNewImage img = new MyNewImage(name, extension);
 
@@ -93,7 +91,7 @@ class MyNewImage {
         img.image = simg;
         return img;
     }
-    private int getResize(int max, int ref, int scale) {
+    private static int resizeFactor(int max, int ref, int scale) {
         double scalar = ref;
         scalar /= max;
 
