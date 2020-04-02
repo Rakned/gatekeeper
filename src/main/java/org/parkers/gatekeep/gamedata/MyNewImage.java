@@ -26,8 +26,12 @@ class MyNewImage {
 
 
 
-    BufferedImage image;
-    String name, extension;
+    private BufferedImage image;
+    private String name, extension;
+
+    String getName() {
+        return name;
+    }
 
     MyNewImage readImage(Set<Attachment> attachmentSet) {
         for (Attachment attachment : attachmentSet) {

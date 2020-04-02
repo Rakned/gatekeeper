@@ -38,7 +38,7 @@ public class GameMap {
             one.drawImage(two, 32, 32);
             one.drawImage(three, 400, 800);
 
-            spec.addFile(one.name, one.getInputStream());
+            spec.addFile(one.getName(), one.getInputStream());
         } catch (IOException e) {
             spec.setContent(e.getMessage());
         }
