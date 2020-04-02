@@ -59,44 +59,12 @@ public class Gatekeeper {
 
         commands.put("game", mapcom);
 
-        commands.put("drawimage", event -> {
-            try {
-                BufferedImage one, two;
-                URLConnection connection;
-
-                connection = new URL("https://cdn.discordapp.com/attachments/686269264067690595/693937117587308574/cathS.png").openConnection();
-                connection.setRequestProperty("User-Agent", "Gatekeeper");
-                one = ImageIO.read(connection.getInputStream());
-
-                connection = new URL("https://cdn.discordapp.com/attachments/686269264067690595/693937350857982073/toot.png").openConnection();
-                connection.setRequestProperty("User-Agent", "Gatekeeper");
-                two = ImageIO.read(connection.getInputStream());
-
-                Graphics2D g2d = one.createGraphics();
-                g2d.drawImage(two, null, 64, 64);
-                g2d.dispose();
-
-                g2d = two.createGraphics();
-                g2d.scale(0.5, 0.5);
-                g2d.dispose();
-
-                g2d = one.createGraphics();
-                g2d.drawImage(two, null, 512, 512);
-                g2d.dispose();
-
-
-                ByteArrayOutputStream out = new ByteArrayOutputStream();
-                ImageIO.write(one, "png", out);
-
-                return event
-                        .getMessage()
-                        .getChannel()
-                        .flatMap(channel -> channel.createMessage(spec ->
-                                spec.addFile("test.png", new ByteArrayInputStream(out.toByteArray()))))
-                        .then();
-            } catch (Exception ignored) { }
-            return event.getMessage().getChannel().then();
-        });
+        commands.put("drawimage",
+                event -> event.getMessage()
+                .getChannel()
+                .flatMap(channel -> channel.createMessage(GameMap::imageResponseTest))
+                .then()
+        );
     }
 
     public static void main( String[] args ) {

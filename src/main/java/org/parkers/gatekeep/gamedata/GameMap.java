@@ -29,6 +29,21 @@ public class GameMap {
 
     private Map<String, Unit> unitMap = new HashMap<>();
 
+    public static void imageResponseTest(MessageCreateSpec spec) {
+        try {
+            MyNewImage one, two, three;
+            one = MyNewImage.readUrl("https://cdn.discordapp.com/attachments/686269264067690595/693937117587308574/cathS.png", "cathS.png");
+            two = MyNewImage.readUrl("https://cdn.discordapp.com/attachments/686269264067690595/693937350857982073/toot.png", "toot.png");
+            three = two.resizeCopy(200);
+            one.drawImage(two, 32, 32);
+            one.drawImage(three, 400, 800);
+
+            spec.addFile(one.name, one.getInputStream());
+        } catch (IOException e) {
+            spec.setContent(e.getMessage());
+        }
+    }
+
 
     private class MyImage {
         private BufferedImage image;
