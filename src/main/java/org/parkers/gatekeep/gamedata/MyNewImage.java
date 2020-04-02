@@ -41,10 +41,7 @@ class MyNewImage {
         return null;
     }
 
-    private MyNewImage(String name, String extension) {
-        this.name = name;
-        this.extension = extension;
-    }
+
     MyNewImage(String fileName, InputStream imageInput) throws IOException {
         name = fileName;
         extension = fileName.substring(fileName.lastIndexOf('.') + 1);
@@ -104,5 +101,15 @@ class MyNewImage {
         Graphics2D g2d = image.createGraphics();
         g2d.drawImage(src.image, null, x, y);
         g2d.dispose();
+    }
+
+
+
+
+
+    // setup method for copy functions
+    private MyNewImage(String name, String extension) {
+        this.name = name;
+        this.extension = extension;
     }
 }
