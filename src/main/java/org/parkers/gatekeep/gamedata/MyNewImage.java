@@ -29,10 +29,6 @@ class MyNewImage {
     private BufferedImage image;
     private String name, extension;
 
-    String getName() {
-        return name;
-    }
-
     MyNewImage readImage(Set<Attachment> attachmentSet) {
         for (Attachment attachment : attachmentSet) {
             try {
@@ -53,6 +49,9 @@ class MyNewImage {
         image = ImageIO.read(imageInput);
     }
 
+    String getName() {
+        return name;
+    }
     InputStream getInputStream() throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         ImageIO.write(image, extension, out);
