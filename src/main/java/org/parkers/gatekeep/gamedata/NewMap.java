@@ -90,6 +90,7 @@ public class NewMap {
     public void printSquareBcg(int x, int y, MessageCreateSpec spec) {
         try {
             blanks[x][y].attach(spec);
+            spec.setContent("(" + x + ", " + y + ")");
         } catch (Exception e) {
             e.printStackTrace();
             spec.setContent("Error encountered! :(");
