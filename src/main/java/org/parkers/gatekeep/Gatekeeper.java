@@ -9,6 +9,8 @@ import discord4j.core.object.entity.Message;
 import discord4j.core.object.util.Snowflake;
 import discord4j.core.spec.MessageCreateSpec;
 import org.parkers.gatekeep.gamedata.GameMap;
+import org.parkers.gatekeep.gamedata.MyImage;
+import org.parkers.gatekeep.gamedata.NewMap;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -29,6 +31,7 @@ public class Gatekeeper {
     private static final Map<Snowflake, GameMap> gameMaps = new HashMap<>();
 
     private static Attachment globalFile;
+    private static NewMap map;
 
     static {
         commands.put("ping", event -> event.getMessage()
@@ -63,11 +66,107 @@ public class Gatekeeper {
                 event -> event.getMessage()
                 .getChannel()
                 .flatMap(channel -> channel.createMessage(GameMap::imageResponseTest))
-                .then()
-        );
+                .then());
+
+        commands.put("demoSetup", event -> {
+            map = new NewMap();
+            map.ulx = 128;
+            map.uly = 128;
+            map.width = 6;
+            map.height = 3;
+            map.size = 256;
+
+            try {
+                MyImage img = MyImage.readUrl
+                        ("https://cdn.discordapp.com/attachments/686269264067690595/693937117587308574/cathS.png", "cathS.png");
+                map.setMapImage(img);
+
+                img = MyImage.readUrl
+                        ("https://cdn.discordapp.com/attachments/686269264067690595/693937350857982073/toot.png", "toot.png");
+                map.setUnitImage(img);
+
+                map.complete();
+
+                return event.getMessage().getChannel().flatMap(channel -> channel.createMessage("Map instantiated successfully!")).then();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return event.getMessage().getChannel().flatMap(channel -> channel.createMessage("Image loading error.")).then();
+        });
+
+        commands.put("demoRender", event -> event.getMessage()
+                .getChannel()
+                .flatMap(channel -> channel.createMessage(map::printMap))
+                .then());
+
+        commands.put("demoUnit", event -> event.getMessage()
+                .getChannel()
+                .flatMap(channel -> channel.createMessage(map::printUnit))
+                .then());
+
+        commands.put("demoDraw", event -> {
+            String[] args = event.getMessage().getContent().orElse("").split("\\s+");
+            if (args.length < 3) {
+                return event.getMessage()
+                        .getChannel()
+                        .flatMap(channel -> channel.createMessage("Bad argument count!"))
+                        .then();
+            }
+
+            int x, y;
+            x = Integer.parseInt(args[1]);
+            y = Integer.parseInt(args[2]);
+
+            map.addSquare(x, y);
+
+            return event.getMessage()
+                    .getChannel()
+                    .flatMap(channel -> channel.createMessage("Unit should be drawn at (" + x + ", " + y + ")"))
+                    .then();
+        });
+
+        commands.put("demoClear", event -> {
+            String[] args = event.getMessage().getContent().orElse("").split("\\s+");
+            if (args.length < 3) {
+                return event.getMessage()
+                        .getChannel()
+                        .flatMap(channel -> channel.createMessage("Bad argument count!"))
+                        .then();
+            }
+
+            int x, y;
+            x = Integer.parseInt(args[1]);
+            y = Integer.parseInt(args[2]);
+
+            map.clearSquare(x, y);
+
+            return event.getMessage()
+                    .getChannel()
+                    .flatMap(channel -> channel.createMessage("Space at (" + x + ", " + y + ") should be clear."))
+                    .then();
+        });
+
+        commands.put("demoSubImage", event -> {
+            String[] args = event.getMessage().getContent().orElse("").split("\\s+");
+            if (args.length < 3) {
+                return event.getMessage()
+                        .getChannel()
+                        .flatMap(channel -> channel.createMessage("Bad argument count!"))
+                        .then();
+            }
+
+            int x, y;
+            x = Integer.parseInt(args[1]);
+            y = Integer.parseInt(args[2]);
+
+            return event.getMessage()
+                    .getChannel()
+                    .flatMap(channel -> channel.createMessage(spec -> map.printSquareBcg(x, y, spec)))
+                    .then();
+        });
     }
 
-    public static void main( String[] args ) {
+    public static void main(String[] args) {
         final DiscordClient client = new DiscordClientBuilder(args[0]).build();
 
         // matches message with bot command, if extant

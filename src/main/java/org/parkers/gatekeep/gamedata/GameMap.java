@@ -21,7 +21,7 @@ import java.util.Set;
 
 public class GameMap {
     private boolean isReady = false;
-    private MyImage baseImage, unitImage;
+    private MyOldImage baseImage, unitImage;
     private BufferedImage[][] squares = null;
 
     private double corner_x = 128, corner_y = 128, gridSize = 256;
@@ -31,10 +31,10 @@ public class GameMap {
 
     public static void imageResponseTest(MessageCreateSpec spec) {
         try {
-            MyNewImage one, two, three;
-            one = MyNewImage.readUrl("https://cdn.discordapp.com/attachments/686269264067690595/693937117587308574/cathS.png", "cathS.png");
-            two = MyNewImage.readUrl("https://cdn.discordapp.com/attachments/686269264067690595/693937350857982073/toot.png", "toot.png");
-            three = two.resizeCopy(200);
+            MyImage one, two, three;
+            one = MyImage.readUrl("https://cdn.discordapp.com/attachments/686269264067690595/693937117587308574/cathS.png", "cathS.png");
+            two = MyImage.readUrl("https://cdn.discordapp.com/attachments/686269264067690595/693937350857982073/toot.png", "toot.png");
+            three = two.copyResize(200);
             one.drawImage(two, 32, 32);
             one.drawImage(three, 400, 800);
 
@@ -45,25 +45,25 @@ public class GameMap {
     }
 
 
-    private class MyImage {
+    private class MyOldImage {
         private BufferedImage image;
         private String name, ext;
 
-        MyImage(String name, InputStream stream) throws IOException {
+        MyOldImage(String name, InputStream stream) throws IOException {
             image = ImageIO.read(stream);
 
             this.name = name.substring(0, name.lastIndexOf('.'));
             this.ext = name.substring(name.lastIndexOf('.') + 1);
         }
 
-        MyImage(MyImage oldFile) {
+        MyOldImage(MyOldImage oldFile) {
             this.name = oldFile.name;
             this.ext = oldFile.ext;
 
             this.image = copyImage(oldFile.image);
         }
 
-        MyImage drawGrid(double ulx, double uly, double gridsize, int width, int height) {
+        MyOldImage drawGrid(double ulx, double uly, double gridsize, int width, int height) {
             Graphics2D graphics = image.createGraphics();
             graphics.setColor(Color.BLACK);
 
@@ -123,15 +123,15 @@ public class GameMap {
             return new BufferedImage(cm, raster, isAlpha, null);
         }
 
-        // method for converting a MyImage from the attachment recovery function to an equivalent Unit entity
+        // method for converting a MyOldImage from the attachment recovery function to an equivalent Unit entity
         Unit genUnit(int tsize) {
             return new Unit(image, tsize);
         }
 
-        void emptySpace(Unit unit, MyImage base) {
+        void emptySpace(Unit unit, MyOldImage base) {
             emptySpace(unit.x, unit.y, base);
         }
-        void emptySpace(int x, int y, MyImage base) {
+        void emptySpace(int x, int y, MyOldImage base) {
             if (x < 0 || x >= gridWidth || y < 0 || y >= gridHeight)
                 return;
 
@@ -272,7 +272,7 @@ public class GameMap {
             case "finalize":
                 isReady = true;
                 baseImage = genFinal();
-                unitImage = new MyImage(baseImage);
+                unitImage = new MyOldImage(baseImage);
                 message.append("The map has been finalized.  You won't be able to change this image later, so I hope you're satisfied!");
                 unitImage.attach("map", out);
                 break;
@@ -341,7 +341,7 @@ public class GameMap {
 
 
     private void saveImage(String[] args, MessageCreateEvent event, StringBuilder message) {
-        MyImage in;
+        MyOldImage in;
 
         if (args.length == 2) {
             in = readAttachment(event);
@@ -361,7 +361,7 @@ public class GameMap {
         message.append("Background image set to ")
                 .append(in.getName());
     }
-    private MyImage readAttachment(MessageCreateEvent event) {
+    private MyOldImage readAttachment(MessageCreateEvent event) {
         Set<Attachment> set = event.getMessage().getAttachments();
 
         for (Attachment attach : set) {
@@ -369,17 +369,17 @@ public class GameMap {
                 String url = attach.getUrl();
                 URLConnection connection = new URL(url).openConnection();
                 connection.setRequestProperty("User-Agent", "Gatekeeper");
-                return new MyImage(attach.getFilename(), connection.getInputStream());
+                return new MyOldImage(attach.getFilename(), connection.getInputStream());
             } catch (Exception ignored) { }
         }
 
         return null;
     }
-    private MyImage genFinal() {
-        return new MyImage(baseImage).drawGrid(corner_x, corner_y, gridSize, gridWidth, gridHeight);
+    private MyOldImage genFinal() {
+        return new MyOldImage(baseImage).drawGrid(corner_x, corner_y, gridSize, gridWidth, gridHeight);
     }
 
-    private String addChar(String name, MyImage img) {
+    private String addChar(String name, MyOldImage img) {
         if (unitMap.containsKey(name))
             return "A character named " + name + "already exits on this map.  Please choose a new name for your unit.";
 

@@ -1,6 +1,7 @@
 package org.parkers.gatekeep.gamedata;
 
 import discord4j.core.object.entity.Attachment;
+import discord4j.core.spec.MessageCreateSpec;
 
 import javax.imageio.ImageIO;
 import java.awt.Graphics2D;
@@ -16,12 +17,12 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.Set;
 
-class MyNewImage {
+public class MyImage {
     // testing utility function
-    static MyNewImage readUrl(String url, String fileName) throws IOException {
+    public static MyImage readUrl(String url, String fileName) throws IOException {
         URLConnection connection = new URL(url).openConnection();
         connection.setRequestProperty("User-Agent", "Gatekeeper");
-        return new MyNewImage(fileName, connection.getInputStream());
+        return new MyImage(fileName, connection.getInputStream());
     }
 
 
@@ -29,18 +30,18 @@ class MyNewImage {
     private BufferedImage image;
     private String name, extension;
 
-    MyNewImage readImage(Set<Attachment> attachmentSet) {
+    MyImage readImage(Set<Attachment> attachmentSet) {
         for (Attachment attachment : attachmentSet) {
             try {
                 String url = attachment.getUrl();
                 URLConnection connection = new URL(url).openConnection();
                 connection.setRequestProperty("User-Agent", "Gatekeeper");
-                return new MyNewImage(attachment.getFilename(), connection.getInputStream());
+                return new MyImage(attachment.getFilename(), connection.getInputStream());
             } catch (Exception ignored) { }
         }
         return null;
     }
-    private MyNewImage(String fileName, InputStream imageInput) throws IOException {
+    private MyImage(String fileName, InputStream imageInput) throws IOException {
         name = fileName;
         extension = fileName.substring(fileName.lastIndexOf('.') + 1);
 
@@ -56,8 +57,9 @@ class MyNewImage {
         return new ByteArrayInputStream(out.toByteArray());
     }
 
-    MyNewImage copy() {
-        MyNewImage newImage = new MyNewImage(name, extension);
+
+    MyImage copy() {
+        MyImage newImage = new MyImage(name, extension);
 
         ColorModel cm = image.getColorModel();
         boolean isAlpha = cm.isAlphaPremultiplied();
@@ -67,7 +69,8 @@ class MyNewImage {
 
         return newImage;
     }
-    MyNewImage resizeCopy(int maxLength) {
+
+    MyImage copyResize(int maxLength) {
         int w, h, tw, th;
         w = image.getWidth();
         h = image.getHeight();
@@ -79,7 +82,7 @@ class MyNewImage {
         else if (w < h)
             tw = resizeFactor(th, h, w);
 
-        MyNewImage img = new MyNewImage(name, extension);
+        MyImage img = new MyImage(name, extension);
 
         Image tmp = image.getScaledInstance(tw, th, Image.SCALE_SMOOTH);
         BufferedImage simg = new BufferedImage(tw, th, BufferedImage.TYPE_INT_ARGB);
@@ -98,18 +101,27 @@ class MyNewImage {
         return (int) (scale / scalar);
     }
 
-    void drawImage(MyNewImage src, int x, int y) {
+    MyImage subImage(int x, int y, int width, int height) {
+        MyImage newImage = new MyImage(name, extension);
+        newImage.image = image.getSubimage(x, y, width, height);
+        return newImage;
+    }
+
+    void attach(MessageCreateSpec spec) throws IOException {
+        spec.addFile(name, this.getInputStream());
+    }
+
+
+
+    void drawImage(MyImage src, int x, int y) {
         Graphics2D g2d = image.createGraphics();
         g2d.drawImage(src.image, null, x, y);
         g2d.dispose();
     }
 
 
-
-
-
-    // setup method for copy functions
-    private MyNewImage(String name, String extension) {
+    // setup creation method for copy functions
+    private MyImage(String name, String extension) {
         this.name = name;
         this.extension = extension;
     }
