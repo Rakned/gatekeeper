@@ -8,8 +8,7 @@ import reactor.core.publisher.Mono;
 import java.io.IOException;
 
 public class NewMap {
-    private MyImage map, unit;
-    private MyImage[][] blanks;
+    private MyImage map, unit, blank;
     private boolean mapCompleted = false;
 
     public int ulx, uly, width, height, size;
@@ -19,6 +18,7 @@ public class NewMap {
             map = image;
         }
     }
+
     public void setUnitImage(MyImage image) {
         if (!mapCompleted) {
             unit = image;
@@ -28,16 +28,14 @@ public class NewMap {
 
     public void complete() {
         // map completion check
-        if (mapCompleted) { return; }
-        else { mapCompleted = true; }
+        if (mapCompleted) {
+            return;
+        } else {
+            mapCompleted = true;
+        }
 
         // create array of blank images to reference
-        blanks = new MyImage[width][height];
-        for (int i = 0; i < width; i++) {
-            for (int j = 0; j < height; j++) {
-                blanks[i][j] = map.subImage(ulx + i*size, uly + j*size, size, size);
-            }
-        }
+        blank = map.copy();
 
         if (unit != null) {
             unit = unit.copyResize(size);
@@ -48,7 +46,8 @@ public class NewMap {
         if (!mapCompleted)
             return;
         if (squareInBounds(x, y)) {
-            map.drawImage(blanks[x][y], ulx + x*size, uly + y*size);
+            int a = ulx + x * size, b = uly + y * size;
+            map.drawImage(blank.subImage(a, b, size, size), a, b);
         }
     }
 
@@ -56,7 +55,7 @@ public class NewMap {
         if (!mapCompleted)
             return;
         if (squareInBounds(x, y)) {
-            map.drawImage(unit, ulx + x*size, uly + y*size);
+            map.drawImage(unit, ulx + x * size, uly + y * size);
         }
     }
 
@@ -67,6 +66,7 @@ public class NewMap {
             spec.setContent("```IO ERROR ENCOUNTERED WHEN PRINTING MAP TO INPUTSTREAM```");
         }
     }
+
     public Mono<Message> printMap(MessageChannel channel) {
         return channel.createMessage(this::printMap);
     }
@@ -78,41 +78,12 @@ public class NewMap {
             spec.setContent("```IO ERROR ENCOUNTERED WHEN PRINTING UNIT TO INPUTSTREAM```");
         }
     }
+
     public Mono<Message> printUnit(MessageChannel channel) {
         return channel.createMessage(this::printUnit);
     }
 
-    public void printSquareBcg(int x, int y, MessageCreateSpec spec) {
-        try {
-            blanks[x][y].attach(spec);
-            spec.setContent("(" + x + ", " + y + ")");
-        } catch (Exception e) {
-            e.printStackTrace();
-            spec.setContent("Error encountered! :(");
-        }
-    }
-
-
-
-
-
-
-
-
-
-
-
     private boolean squareInBounds(int x, int y) {
         return x >= 0 && y >= 0 && x < width && y < height;
-    }
-
-
-    private static String[] getArgs(String str) {
-        return str.split("\\s");
-        /*String[] product = str.split("\\s+(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
-        for (int i = 0; i < product.length; i++) {
-            product[i] = product[i].replaceAll("\"", "");
-        }
-        return product;*/
     }
 }

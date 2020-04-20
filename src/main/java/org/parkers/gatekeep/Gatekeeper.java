@@ -30,9 +30,7 @@ public class Gatekeeper {
     private static final Map<String, Command> commands = new HashMap<>();
     private static final Map<Snowflake, GameMap> gameMaps = new HashMap<>();
 
-    private static Attachment globalFile;
     private static NewMap map;
-    private static NewMap demoMap;
 
     static {
         commands.put("ping", event -> event.getMessage()
@@ -146,91 +144,10 @@ public class Gatekeeper {
                     .flatMap(channel -> channel.createMessage("Space at (" + x + ", " + y + ") should be clear."))
                     .then();
         });
-
-        commands.put("demoSubImage", event -> {
-            String[] args = event.getMessage().getContent().orElse("").split("\\s+");
-            if (args.length < 3) {
-                return event.getMessage()
-                        .getChannel()
-                        .flatMap(channel -> channel.createMessage("Bad argument count!"))
-                        .then();
-            }
-
-            int x, y;
-            x = Integer.parseInt(args[1]);
-            y = Integer.parseInt(args[2]);
-
-            return event.getMessage()
-                    .getChannel()
-                    .flatMap(channel -> channel.createMessage(spec -> map.printSquareBcg(x, y, spec)))
-                    .then();
-        });
-
-        commands.put("demoFull", event -> {
-            NewMap map;
-
-            // map setup
-            try {
-                map = new NewMap();
-                map.ulx = 128;
-                map.uly = 128;
-                map.width = 6;
-                map.height = 3;
-                map.size = 256;
-
-                MyImage img = MyImage.readUrl
-                        ("https://cdn.discordapp.com/attachments/686269264067690595/693937117587308574/cathS.png", "cathS.png");
-                map.setMapImage(img);
-
-                img = MyImage.readUrl
-                        ("https://cdn.discordapp.com/attachments/686269264067690595/693937350857982073/toot.png", "toot.png");
-                map.setUnitImage(img);
-
-                map.complete();
-            } catch (Exception e) {
-                e.printStackTrace();
-                return event.getMessage().getChannel().flatMap(channel -> channel.createMessage("Error building map.")).then();
-            }
-
-
-            map.addSquare(1, 1);
-            map.addSquare(3, 2);
-            map.addSquare(0, 0);
-            map.clearSquare(2, 0);
-            map.clearSquare(0, 1);
-            map.clearSquare(0, 0);
-
-            return event.getMessage().getChannel().flatMap(map::printMap)
-                    .then(event.getMessage().getChannel()).flatMap(channel ->
-                            channel.createMessage(spec -> map.printSquareBcg(0, 0, spec)))
-                    .then();
-        });
     }
 
     public static void main(String[] args) {
         final DiscordClient client = new DiscordClientBuilder(args[0]).build();
-
-        try {
-            demoMap = new NewMap();
-            demoMap.ulx = 128;
-            demoMap.uly = 128;
-            demoMap.width = 6;
-            demoMap.height = 3;
-            demoMap.size = 256;
-
-            MyImage img = MyImage.readUrl
-                    ("https://cdn.discordapp.com/attachments/686269264067690595/693937117587308574/cathS.png", "cathS.png");
-            demoMap.setMapImage(img);
-
-            img = MyImage.readUrl
-                    ("https://cdn.discordapp.com/attachments/686269264067690595/693937350857982073/toot.png", "toot.png");
-            demoMap.setUnitImage(img);
-
-            demoMap.complete();
-        } catch (Exception e) {
-            e.printStackTrace();
-            demoMap = null;
-        }
 
         // matches message with bot command, if extant
         client.getEventDispatcher().on(MessageCreateEvent.class)
@@ -248,34 +165,5 @@ public class Gatekeeper {
         client.login().block();
 
         client.logout();
-    }
-
-    private static void saveFile( Attachment attach ) {
-        globalFile = attach;
-    }
-
-    private static void createMessage(MessageCreateSpec spec) {
-        if (globalFile == null) {
-            spec.setContent("Error: no saved file detected!");
-        } else {
-            String url = globalFile.getUrl();
-            try {
-                URLConnection connection = new URL(url).openConnection();
-                connection.setRequestProperty("User-Agent", "Gatekeeper");
-                spec.addFile(globalFile.getFilename(), connection.getInputStream());
-            } catch (Exception e) {
-                spec.setContent("Exception encountered while accessing URL <"+url+">");
-            }
-        }
-    }
-
-    private static Attachment getAttachment(Message m) {
-        return m.getAttachments().iterator().next();
-    }
-
-    private static Mono<Void> newMap(MessageCreateEvent e) {
-
-
-        return null;
     }
 }
