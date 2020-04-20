@@ -35,7 +35,7 @@ public class NewMap {
         blanks = new MyImage[width][height];
         for (int i = 0; i < width; i++) {
             for (int j = 0; j < height; j++) {
-                blanks[i][j] = map.subImage(ulx + i*width, uly + j*height, size, size);
+                blanks[i][j] = map.subImage(ulx + i*size, uly + j*size, size, size);
             }
         }
 
@@ -45,13 +45,19 @@ public class NewMap {
     }
 
     public void clearSquare(int x, int y) {
+        if (!mapCompleted)
+            return;
         if (squareInBounds(x, y)) {
-            map.drawImage(blanks[x][y], ulx + x*width, uly + y*width);
+            map.drawImage(blanks[x][y], ulx + x*size, uly + y*size);
         }
     }
 
     public void addSquare(int x, int y) {
-
+        if (!mapCompleted)
+            return;
+        if (squareInBounds(x, y)) {
+            map.drawImage(unit, ulx + x*size, uly + y*size);
+        }
     }
 
     public void printMap(MessageCreateSpec spec) {
@@ -71,6 +77,9 @@ public class NewMap {
         } catch (IOException e) {
             spec.setContent("```IO ERROR ENCOUNTERED WHEN PRINTING UNIT TO INPUTSTREAM```");
         }
+    }
+    public Mono<Message> printUnit(MessageChannel channel) {
+        return channel.createMessage(this::printUnit);
     }
 
     public void printSquareBcg(int x, int y, MessageCreateSpec spec) {

@@ -196,11 +196,14 @@ public class Gatekeeper {
             map.addSquare(1, 1);
             map.addSquare(3, 2);
             map.addSquare(0, 0);
-            map.addSquare(1, 1);
-            map.clearSquare(0, 0);
+            map.clearSquare(2, 0);
             map.clearSquare(0, 1);
+            map.clearSquare(0, 0);
 
-            return event.getMessage().getChannel().flatMap(map::printMap).then();
+            return event.getMessage().getChannel().flatMap(map::printMap)
+                    .then(event.getMessage().getChannel()).flatMap(channel ->
+                            channel.createMessage(spec -> map.printSquareBcg(0, 0, spec)))
+                    .then();
         });
     }
 
