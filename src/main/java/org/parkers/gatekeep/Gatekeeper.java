@@ -32,6 +32,7 @@ public class Gatekeeper {
 
     private static Attachment globalFile;
     private static NewMap map;
+    private static NewMap demoMap;
 
     static {
         commands.put("ping", event -> event.getMessage()
@@ -164,10 +165,69 @@ public class Gatekeeper {
                     .flatMap(channel -> channel.createMessage(spec -> map.printSquareBcg(x, y, spec)))
                     .then();
         });
+
+        commands.put("demoFull", event -> {
+            NewMap map;
+
+            // map setup
+            try {
+                map = new NewMap();
+                map.ulx = 128;
+                map.uly = 128;
+                map.width = 6;
+                map.height = 3;
+                map.size = 256;
+
+                MyImage img = MyImage.readUrl
+                        ("https://cdn.discordapp.com/attachments/686269264067690595/693937117587308574/cathS.png", "cathS.png");
+                map.setMapImage(img);
+
+                img = MyImage.readUrl
+                        ("https://cdn.discordapp.com/attachments/686269264067690595/693937350857982073/toot.png", "toot.png");
+                map.setUnitImage(img);
+
+                map.complete();
+            } catch (Exception e) {
+                e.printStackTrace();
+                return event.getMessage().getChannel().flatMap(channel -> channel.createMessage("Error building map.")).then();
+            }
+
+
+            map.addSquare(1, 1);
+            map.addSquare(3, 2);
+            map.addSquare(0, 0);
+            map.addSquare(1, 1);
+            map.clearSquare(0, 0);
+            map.clearSquare(0, 1);
+
+            return event.getMessage().getChannel().flatMap(map::printMap).then();
+        });
     }
 
     public static void main(String[] args) {
         final DiscordClient client = new DiscordClientBuilder(args[0]).build();
+
+        try {
+            demoMap = new NewMap();
+            demoMap.ulx = 128;
+            demoMap.uly = 128;
+            demoMap.width = 6;
+            demoMap.height = 3;
+            demoMap.size = 256;
+
+            MyImage img = MyImage.readUrl
+                    ("https://cdn.discordapp.com/attachments/686269264067690595/693937117587308574/cathS.png", "cathS.png");
+            demoMap.setMapImage(img);
+
+            img = MyImage.readUrl
+                    ("https://cdn.discordapp.com/attachments/686269264067690595/693937350857982073/toot.png", "toot.png");
+            demoMap.setUnitImage(img);
+
+            demoMap.complete();
+        } catch (Exception e) {
+            e.printStackTrace();
+            demoMap = null;
+        }
 
         // matches message with bot command, if extant
         client.getEventDispatcher().on(MessageCreateEvent.class)
@@ -179,6 +239,8 @@ public class Gatekeeper {
                                 .filter(entry -> content.startsWith("g!" + entry.getKey()))
                                 .flatMap(entry -> entry.getValue().execute(event))
                                 .next() ) ).subscribe();
+
+        //client.getEventDispatcher().on(MessageCreateEvent.class)
 
         client.login().block();
 

@@ -1,27 +1,13 @@
 package org.parkers.gatekeep.gamedata;
 
-import discord4j.core.event.domain.message.MessageCreateEvent;
+import discord4j.core.object.entity.Message;
+import discord4j.core.object.entity.MessageChannel;
 import discord4j.core.spec.MessageCreateSpec;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 
 public class NewMap {
-    public static Mono<Void> doSomething(MessageCreateEvent event) {
-
-        String[] args = getArgs(event.getMessage().getContent().orElse("").substring(2).toLowerCase());
-
-        switch (args[0]) {
-            case "init":
-
-            default:
-                return event.getMessage()
-                        .getChannel()
-                        .flatMap(channel -> channel.createMessage("Could not recognize the command."))
-                        .then();
-        }
-    }
-
     private MyImage map, unit;
     private MyImage[][] blanks;
     private boolean mapCompleted = false;
@@ -41,15 +27,12 @@ public class NewMap {
 
 
     public void complete() {
-        if (mapCompleted) {
-            return;
-        } else {
-            mapCompleted = true;
-        }
+        // map completion check
+        if (mapCompleted) { return; }
+        else { mapCompleted = true; }
 
-
+        // create array of blank images to reference
         blanks = new MyImage[width][height];
-
         for (int i = 0; i < width; i++) {
             for (int j = 0; j < height; j++) {
                 blanks[i][j] = map.subImage(ulx + i*width, uly + j*height, size, size);
@@ -77,6 +60,9 @@ public class NewMap {
         } catch (IOException e) {
             spec.setContent("```IO ERROR ENCOUNTERED WHEN PRINTING MAP TO INPUTSTREAM```");
         }
+    }
+    public Mono<Message> printMap(MessageChannel channel) {
+        return channel.createMessage(this::printMap);
     }
 
     public void printUnit(MessageCreateSpec spec) {
