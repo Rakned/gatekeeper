@@ -3,24 +3,13 @@ package org.parkers.gatekeep;
 import discord4j.core.DiscordClient;
 import discord4j.core.DiscordClientBuilder;
 import discord4j.core.event.domain.message.MessageCreateEvent;
-import discord4j.core.object.entity.Attachment;
 import discord4j.core.object.entity.Entity;
-import discord4j.core.object.entity.Message;
 import discord4j.core.object.util.Snowflake;
-import discord4j.core.spec.MessageCreateSpec;
-import org.parkers.gatekeep.gamedata.GameMap;
 import org.parkers.gatekeep.gamedata.MyImage;
 import org.parkers.gatekeep.gamedata.NewMap;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import javax.imageio.ImageIO;
-import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.net.URL;
-import java.net.URLConnection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -28,9 +17,9 @@ import java.util.Map;
 public class Gatekeeper {
     // contains all valid command inputs
     private static final Map<String, Command> commands = new HashMap<>();
-    private static final Map<Snowflake, GameMap> gameMaps = new HashMap<>();
 
-    private static NewMap map;
+    // contains all maps created for use since the bot began operation
+    private static final Map<Snowflake, NewMap> activeMaps = new HashMap<>();
 
     static {
         commands.put("ping", event -> event.getMessage()
@@ -41,32 +30,35 @@ public class Gatekeeper {
         commands.put("newmap", event -> event.getMessage()
                 .getChannel()
                 .map(Entity::getId)
-                .filter(snowflake -> !gameMaps.containsKey(snowflake))
-                .doOnNext(snowflake -> gameMaps.put(snowflake, new GameMap()))
+                .filter(snowflake -> !activeMaps.containsKey(snowflake))
+                .doOnNext(snowflake -> activeMaps.put(snowflake, new NewMap()))
                 .then(event.getMessage().getChannel())
                 .flatMap(channel -> channel.createMessage("Blank map initialized for this channel."))
                 .then());
 
 
-        Command mapcom = event -> event.getMessage()
+        Command mapEvent = event -> event
+                .getMessage()
                 .getChannel()
-                .filter(channel -> gameMaps.containsKey(channel.getId()))
-                .flatMap(channel -> channel.createMessage(spec -> gameMaps.get(channel.getId()).command(event, spec)))
+                .filter(channel -> activeMaps.containsKey(channel.getId()))
+                .map(channel -> activeMaps.get(channel.getId()))
+                .flatMap(map -> map.doSomething(event))
                 .then();
 
+
+
         // remember to test thoroughly as you implement!
-        commands.put("map", mapcom);
+        commands.put("map", mapEvent);
 
-        commands.put("move", mapcom);
+        commands.put("move", mapEvent);
 
-        commands.put("game", mapcom);
+        commands.put("game", mapEvent);
+    }
 
-        commands.put("drawimage",
-                event -> event.getMessage()
-                .getChannel()
-                .flatMap(channel -> channel.createMessage(GameMap::imageResponseTest))
-                .then());
 
+    // demo code
+    private static NewMap map;
+    static {
         commands.put("demoSetup", event -> {
             map = new NewMap();
             map.ulx = 128;
@@ -145,6 +137,7 @@ public class Gatekeeper {
                     .then();
         });
     }
+
 
     public static void main(String[] args) {
         final DiscordClient client = new DiscordClientBuilder(args[0]).build();

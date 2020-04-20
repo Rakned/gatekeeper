@@ -1,5 +1,6 @@
 package org.parkers.gatekeep.gamedata;
 
+import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.Message;
 import discord4j.core.object.entity.MessageChannel;
 import discord4j.core.spec.MessageCreateSpec;
@@ -8,6 +9,11 @@ import reactor.core.publisher.Mono;
 import java.io.IOException;
 
 public class NewMap {
+    public Mono<Void> doSomething(MessageCreateEvent event) {
+        return event.getMessage().getChannel().then();
+    }
+
+
     private MyImage map, unit, blank;
     private boolean mapCompleted = false;
 
