@@ -4,7 +4,7 @@ import java.awt.image.BufferedImage;
 
 class Unit {
     MyImage portrait;
-    private int x, y;
+    int x, y;
 
     Unit(MyImage image, int tsize) {
         x = -1;

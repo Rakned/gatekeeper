@@ -1,9 +1,11 @@
 package org.parkers.gatekeep.gamedata;
 
 import discord4j.core.event.domain.message.MessageCreateEvent;
+import discord4j.core.object.entity.Attachment;
 import discord4j.core.object.entity.Message;
 import reactor.core.publisher.Mono;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class GameMap {
@@ -33,6 +35,7 @@ public class GameMap {
                 return setAttribute(event, args);
 
             case "complete":
+                return complete(event);
 
             default:
                 return event.getMessage().getChannel().then();
@@ -44,7 +47,6 @@ public class GameMap {
                 return event.getMessage().getChannel().then();
         }
     }
-
     private static String[] getArgs(MessageCreateEvent event) {
         String message = event.getMessage().getContent().orElse("");
 
@@ -110,6 +112,16 @@ public class GameMap {
                 return simpleResponse(event, "Could not recognize argument `" + args[1] + "`.  Please try again.");
         }
     }
+    private boolean setMap(MessageCreateEvent event) {
+        try {
+            Attachment file = event.getMessage().getAttachments().iterator().next();
+            map = MyImage.readUrl(file.getUrl(), file.getFilename());
+
+            return true;
+        } catch (Exception ignored) {
+            return false;
+        }
+    }
 
     private Mono<Void> simpleResponse(MessageCreateEvent event, String message) {
         return response(event, message).then();
@@ -118,17 +130,13 @@ public class GameMap {
         return event.getMessage().getChannel().flatMap(messageChannel -> messageChannel.createMessage(message));
     }
 
-    // todo implement
-    private boolean setMap(MessageCreateEvent event) {
-
-    }
-
 
 
 
     private MyImage map, blank;
     private int ulx, uly, width, height, size;
-    private Map<String, MyImage> units = new
+    private Map<String, MyImage> units = null;
+    private boolean[][] spaceOccupation = null;
 
     private boolean mapCompleted = false;
     public boolean isFinal() {
@@ -139,35 +147,52 @@ public class GameMap {
     }
 
 
-    public void complete() {
+    private Mono<Void> complete(MessageCreateEvent event) {
         // map completion check
         if (mapCompleted) {
-            return;
+            return simpleResponse(event, "Map is already flagged as complete.");
         } else {
             mapCompleted = true;
         }
 
-        // create array of blank images to reference
+        // todo: validity check (ensure grid fits w/in scope of map)
+
+        // any code to customize the map should go here (if adding grid lines, labels etc)
+
+        // create blank copy of map for clearing spaces
         blank = map.copy();
+
+        // remaining object initialization
+        units = new HashMap<>();
+        spaceOccupation = new boolean[width][height];
+        return simpleResponse(event, "Map has been succesfully finalized.");
     }
 
-    public void clearSquare(int x, int y) {
-        if (!mapCompleted)
-            return;
+    private boolea
+
+    private boolean moveUnit(Unit unit, int x, int y) {
+        if (spaceOccupation[x][y]) {
+            return false;
+        } else {
+            clearSquare(unit.x, unit.y);
+            unit.setPos(x, y);
+            drawUnit(unit);
+            return true;
+        }
+    }
+
+    private void clearSquare(int x, int y) {
         if (squareInBounds(x, y)) {
             int a = ulx + x * size, b = uly + y * size;
             map.drawImage(blank.subImage(a, b, size, size), a, b);
+            spaceOccupation[x][y] = false;
         }
     }
-
-    public void addSquare(int x, int y) {
-        if (!mapCompleted)
-            return;
-        if (squareInBounds(x, y)) {
-            map.drawImage(unit, ulx + x * size, uly + y * size);
+    private void drawUnit(Unit unit) {
+        if (squareInBounds(unit.x, unit.y)) {
+            map.drawImage(unit.portrait, ulx + unit.x * size, uly + unit.y * size);
         }
     }
-
     private boolean squareInBounds(int x, int y) {
         return x >= 0 && y >= 0 && x < width && y < height;
     }

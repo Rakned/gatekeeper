@@ -67,6 +67,7 @@ public class Gatekeeper {
         // add units to existing map
         commands.put("addnew", mapGameEvent);
         commands.put("addmany", mapGameEvent);
+        commands.put("unitat", mapGameEvent);
 
         // move units onto/around board
         commands.put("move", mapGameEvent);
