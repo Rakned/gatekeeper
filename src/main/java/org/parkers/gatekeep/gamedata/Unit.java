@@ -3,24 +3,14 @@ package org.parkers.gatekeep.gamedata;
 import java.awt.image.BufferedImage;
 
 class Unit {
-    BufferedImage portrait;
+    MyImage portrait;
+    private int x, y;
 
-    int x, y;
-
-    Unit(BufferedImage image, double tsize) {
+    Unit(MyImage image, int tsize) {
         x = -1;
         y = -1;
 
-        double w, h, scalar;
-        w = image.getWidth();
-        h = image.getHeight();
-
-        if (w > h)
-            scalar = w / tsize;
-        else
-            scalar = h / tsize;
-
-        image.createGraphics().scale(scalar, scalar);
+        portrait = image.copyResize(tsize);
     }
 
     void setPos(int x, int y) {

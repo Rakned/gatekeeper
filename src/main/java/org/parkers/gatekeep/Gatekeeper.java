@@ -46,6 +46,13 @@ public class Gatekeeper {
                 .flatMap(map -> map.doSomething(event))
                 .then();
 
+        // set map data (map, x, y, width, height, size, all)
+        commands.put("set", mapSetEvent); // generic
+
+        // finalize the map and prepare it for play
+        commands.put("complete", mapSetEvent);
+
+
         // access lambda for finalized map
         Command mapGameEvent = event -> event
                 .getMessage()
@@ -57,16 +64,9 @@ public class Gatekeeper {
                 .then();
 
 
-        // set map data (map, x, y, width, height, size, all)
-        commands.put("set", mapSetEvent); // generic
-
-        // finalize the map and prepare it for play
-        commands.put("finalize", mapSetEvent);
-
-
         // add units to existing map
-        commands.put("addnew", mapSetEvent);
-        commands.put("addmany", mapSetEvent);
+        commands.put("addnew", mapGameEvent);
+        commands.put("addmany", mapGameEvent);
 
         // move units onto/around board
         commands.put("move", mapGameEvent);
