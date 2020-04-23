@@ -1,5 +1,6 @@
 package org.parkers.gatekeep.gamedata;
 
+import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.Attachment;
 import discord4j.core.spec.MessageCreateSpec;
 
@@ -17,9 +18,9 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.Set;
 
-public class MyImage {
+class MyImage {
     // testing utility function
-    public static MyImage readUrl(String url, String fileName) throws IOException {
+    static MyImage readUrl(String url, String fileName) throws IOException {
         URLConnection connection = new URL(url).openConnection();
         connection.setRequestProperty("User-Agent", "Gatekeeper");
         return new MyImage(fileName, connection.getInputStream());
@@ -30,7 +31,9 @@ public class MyImage {
     private BufferedImage image;
     private String name, extension;
 
-    MyImage readImage(Set<Attachment> attachmentSet) {
+    static MyImage readImage(MessageCreateEvent event) {
+        Set<Attachment> attachmentSet = event.getMessage().getAttachments();
+
         for (Attachment attachment : attachmentSet) {
             try {
                 String url = attachment.getUrl();
@@ -39,6 +42,7 @@ public class MyImage {
                 return new MyImage(attachment.getFilename(), connection.getInputStream());
             } catch (Exception ignored) { }
         }
+
         return null;
     }
     private MyImage(String fileName, InputStream imageInput) throws IOException {
@@ -51,7 +55,7 @@ public class MyImage {
     String getName() {
         return name;
     }
-    InputStream getInputStream() throws IOException {
+    private InputStream getInputStream() throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         ImageIO.write(image, extension, out);
         return new ByteArrayInputStream(out.toByteArray());

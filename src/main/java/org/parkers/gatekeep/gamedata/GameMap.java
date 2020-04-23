@@ -1,7 +1,6 @@
 package org.parkers.gatekeep.gamedata;
 
 import discord4j.core.event.domain.message.MessageCreateEvent;
-import discord4j.core.object.entity.Attachment;
 import discord4j.core.object.entity.Message;
 import reactor.core.publisher.Mono;
 
@@ -56,7 +55,7 @@ public class GameMap {
 
         message = message.substring(2);
 
-        // todo replace with more advanced regex (detect quotes?)
+        // todo replace with more advanced regex (detect quotes)?
         return message.split("\\s+");
     }
 
@@ -114,13 +113,14 @@ public class GameMap {
     }
     private boolean setMap(MessageCreateEvent event) {
         try {
-            Attachment file = event.getMessage().getAttachments().iterator().next();
-            map = MyImage.readUrl(file.getUrl(), file.getFilename());
+            MyImage image = MyImage.readImage(event);
+            if (image != null) {
+                map = image;
+                return true;
+            }
+        } catch (Exception ignored) {}
 
-            return true;
-        } catch (Exception ignored) {
-            return false;
-        }
+        return false;
     }
 
     private Mono<Void> simpleResponse(MessageCreateEvent event, String message) {
@@ -139,12 +139,6 @@ public class GameMap {
     private boolean[][] spaceOccupation = null;
 
     private boolean mapCompleted = false;
-    public boolean isFinal() {
-        return mapCompleted;
-    }
-    public boolean isNonFinal() {
-        return !mapCompleted;
-    }
 
 
     private Mono<Void> complete(MessageCreateEvent event) {
@@ -159,7 +153,7 @@ public class GameMap {
 
         // any code to customize the map should go here (if adding grid lines, labels etc)
 
-        // create blank copy of map for clearing spaces
+        // create blank copy of map used to clear spaces
         blank = map.copy();
 
         // remaining object initialization
@@ -168,7 +162,23 @@ public class GameMap {
         return simpleResponse(event, "Map has been succesfully finalized.");
     }
 
-    private boolea
+    private Mono<Void> addSingleUnit(MessageCreateEvent event, String unitName) {
+        if (units.containsKey(unitName)) {
+            return simpleResponse(event, "Unit `" + unitName + "` already exists for this game.");
+        }
+
+        try {
+            MyImage image = MyImage.readImage(event);
+            if (image == null) {
+                return simpleResponse(event, "I couldn't find any files attached to your message!");
+            }
+            Unit unit = new Unit(image, size);
+            return simpleResponse(event, "Unit `" + unitName + "` added to game.");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return simpleResponse(event, "IO Error reading file.");
+        }
+    }
 
     private boolean moveUnit(Unit unit, int x, int y) {
         if (spaceOccupation[x][y]) {
@@ -180,7 +190,6 @@ public class GameMap {
             return true;
         }
     }
-
     private void clearSquare(int x, int y) {
         if (squareInBounds(x, y)) {
             int a = ulx + x * size, b = uly + y * size;
@@ -192,6 +201,13 @@ public class GameMap {
         if (squareInBounds(unit.x, unit.y)) {
             map.drawImage(unit.portrait, ulx + unit.x * size, uly + unit.y * size);
         }
+    }
+
+    public boolean isFinal() {
+        return mapCompleted;
+    }
+    public boolean isNonFinal() {
+        return !mapCompleted;
     }
     private boolean squareInBounds(int x, int y) {
         return x >= 0 && y >= 0 && x < width && y < height;
