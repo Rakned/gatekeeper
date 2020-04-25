@@ -1,7 +1,5 @@
 package org.parkers.gatekeep.gamedata;
 
-import java.awt.image.BufferedImage;
-
 class Unit {
     MyImage portrait;
     int x, y;

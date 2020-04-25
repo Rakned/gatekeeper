@@ -60,6 +60,12 @@ class MyImage {
         ImageIO.write(image, extension, out);
         return new ByteArrayInputStream(out.toByteArray());
     }
+    int getWidth() {
+        return image.getWidth();
+    }
+    public int getHeight() {
+        return image.getHeight();
+    }
 
 
     MyImage copy() {

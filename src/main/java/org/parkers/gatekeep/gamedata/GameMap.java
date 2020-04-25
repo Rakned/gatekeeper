@@ -4,6 +4,7 @@ import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.Message;
 import reactor.core.publisher.Mono;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -11,7 +12,8 @@ public class GameMap {
     private static final String SET_ERROR_NO_ARG_RESPONSE = "You need to include an argument describing what you wish to set.\n" +
             "Valid arguments are: `map`, `x`, `y`, `width`, `height`, `size`, `all`",
             SET_ERROR_BAD_ARG_COUNT_RESPONSE = "You need to include one value to set as the new attribute value.",
-            SET_ERROR_BAD_INPUT_RESPONSE = "Sorry, but the value you provided was not within the attribute's bounds.  Please try again.";
+            SET_ERROR_BAD_INPUT_RESPONSE = "Sorry, but the value you provided was not within the attribute's bounds.  Please try again.",
+            ERROR_PARSE_FAIL = "Trying to parse your arguments threw an error!  Are you sure they are in the correct format?";
 
 
     public Mono<Void> doSomething(MessageCreateEvent event) {
@@ -22,6 +24,7 @@ public class GameMap {
                     channel.createMessage("Error reading message content.")).then();
         }
 
+        // choose switch interface based on if the map is complete
         if (isNonFinal()) {
             return doGameInit(event, args);
         } else {
@@ -42,6 +45,18 @@ public class GameMap {
     }
     private Mono<Void> doGameUpdate(MessageCreateEvent event, String[] args) {
         switch (args[0]) {
+            case "addnew":
+                return addOneUnit(event, args);
+
+            case "checkunit":
+                return unitCheck(event, args);
+
+            case "move":
+                return moveUnit(event, args);
+
+            case "view":
+                return printMap(event);
+
             default:
                 return event.getMessage().getChannel().then();
         }
@@ -123,6 +138,66 @@ public class GameMap {
         return false;
     }
 
+    private Mono<Void> addOneUnit(MessageCreateEvent event, String[] args) {
+        if (args.length != 2) {
+            return simpleResponse(event, "Message must include a single-token name for your unit.");
+        }
+        if (units.containsKey(args[1])) {
+            return simpleResponse(event, "This game already contains a unit named `" + args[1] + "`.");
+        }
+
+        // todo put image code into "doOnNext" for latency decrease?
+        MyImage image = MyImage.readImage(event);
+        if (image == null) {
+            return simpleResponse(event, "I could not find an image attached to your request.  Please try again.");
+        }
+
+        units.put(args[1], new Unit(image, size));
+        return simpleResponse(event, "Successfully created unit `" + args[1] + "`.");
+    }
+    private Mono<Void> unitCheck(MessageCreateEvent event, String[] args) {
+        if (args.length != 2) {
+            return simpleResponse(event, "Please include only the single-token name of the unit you'd like information on.");
+        }
+
+        if (!units.containsKey(args[1])) {
+            return simpleResponse(event, "Unit `" + args[1] + "` could not be found.  Please check your spelling and try again.");
+        }
+
+        return event.getMessage().getChannel().flatMap(channel -> channel.createMessage(spec -> {
+            Unit unit = units.get(args[1]);
+            String message = "`" + args[1] + "` is located at `(" + unit.x + ", " + unit.y + ")`";
+            try {
+                unit.portrait.attach(spec);
+            } catch (IOException error) {
+                message += "\nIO error encountered when retrieving unit data.";
+            }
+            spec.setContent(message);
+        })).then();
+    }
+    private Mono<Void> moveUnit(MessageCreateEvent event, String[] args) {
+        if (args.length != 4) {
+            return simpleResponse(event, "Proper format: `g!move <unit> <tx> <ty>");
+        }
+        if (!units.containsKey(args[1])) {
+            return simpleResponse(event, "Unit `" + args[1] + "` could not be found.  Please check your spelling, or create it if you'd prefer.");
+        }
+
+        int x, y;
+        try {
+            x = Integer.parseInt(args[2]);
+            y = Integer.parseInt(args[3]);
+        } catch (Exception e) {
+            return simpleResponse(event, ERROR_PARSE_FAIL);
+        }
+
+        if (moveUnit(units.get(args[1]), x, y)) {
+            return simpleResponse(event, "Unit moved successfully!");
+        } else {
+            return simpleResponse(event, "Unit could not be moved...");
+        }
+    }
+
     private Mono<Void> simpleResponse(MessageCreateEvent event, String message) {
         return response(event, message).then();
     }
@@ -135,21 +210,23 @@ public class GameMap {
 
     private MyImage map, blank;
     private int ulx, uly, width, height, size;
-    private Map<String, MyImage> units = null;
+    private Map<String, Unit> units = null;
     private boolean[][] spaceOccupation = null;
 
     private boolean mapCompleted = false;
 
 
     private Mono<Void> complete(MessageCreateEvent event) {
-        // map completion check
+        // map validity check
         if (mapCompleted) {
             return simpleResponse(event, "Map is already flagged as complete.");
+        } else if ((ulx + width*size) > map.getWidth()) {
+            return simpleResponse(event, "Error: Grid width exceeds image width!");
+        } else if ((uly + height*size) > map.getHeight()) {
+            return simpleResponse(event, "Error: Grid height exceeds image height!");
         } else {
             mapCompleted = true;
         }
-
-        // todo: validity check (ensure grid fits w/in scope of map)
 
         // any code to customize the map should go here (if adding grid lines, labels etc)
 
@@ -160,24 +237,6 @@ public class GameMap {
         units = new HashMap<>();
         spaceOccupation = new boolean[width][height];
         return simpleResponse(event, "Map has been succesfully finalized.");
-    }
-
-    private Mono<Void> addSingleUnit(MessageCreateEvent event, String unitName) {
-        if (units.containsKey(unitName)) {
-            return simpleResponse(event, "Unit `" + unitName + "` already exists for this game.");
-        }
-
-        try {
-            MyImage image = MyImage.readImage(event);
-            if (image == null) {
-                return simpleResponse(event, "I couldn't find any files attached to your message!");
-            }
-            Unit unit = new Unit(image, size);
-            return simpleResponse(event, "Unit `" + unitName + "` added to game.");
-        } catch (Exception e) {
-            e.printStackTrace();
-            return simpleResponse(event, "IO Error reading file.");
-        }
     }
 
     private boolean moveUnit(Unit unit, int x, int y) {
@@ -200,7 +259,17 @@ public class GameMap {
     private void drawUnit(Unit unit) {
         if (squareInBounds(unit.x, unit.y)) {
             map.drawImage(unit.portrait, ulx + unit.x * size, uly + unit.y * size);
+            spaceOccupation[unit.x][unit.y] = true;
         }
+    }
+    private Mono<Void> printMap(MessageCreateEvent event) {
+        return event.getMessage().getChannel().flatMap(ch -> ch.createMessage(spec -> {
+            try {
+                map.attach(spec);
+            } catch (IOException e) {
+                spec.setContent("IO error encountered drawing map.");
+            }
+        })).then();
     }
 
     public boolean isFinal() {
