@@ -54,6 +54,9 @@ public class GameMap {
             case "move":
                 return moveUnit(event, args);
 
+            case "remove":
+                return removeUnit(event, args);
+
             case "view":
                 return printMap(event);
 
@@ -161,7 +164,7 @@ public class GameMap {
         }
 
         if (!units.containsKey(args[1])) {
-            return simpleResponse(event, "Unit `" + args[1] + "` could not be found.  Please check your spelling and try again.");
+            return errUnitNotFound(event, args[1]);
         }
 
         return event.getMessage().getChannel().flatMap(channel -> channel.createMessage(spec -> {
@@ -180,7 +183,7 @@ public class GameMap {
             return simpleResponse(event, "Proper format: `g!move <unit> <tx> <ty>");
         }
         if (!units.containsKey(args[1])) {
-            return simpleResponse(event, "Unit `" + args[1] + "` could not be found.  Please check your spelling, or create it if you'd prefer.");
+            return errUnitNotFound(event, args[1]);
         }
 
         int x, y;
@@ -197,12 +200,26 @@ public class GameMap {
             return simpleResponse(event, "Unit could not be moved...");
         }
     }
+    private Mono<Void> removeUnit(MessageCreateEvent event, String[] args) {
+        if (args.length != 2) {
+            return simpleResponse(event, "Message must include the single-token name of the unit to remove.");
+        }
+        if (!units.containsKey(args[1])) {
+            return errUnitNotFound(event, args[1]);
+        }
+
+        dropUnit(units.get(args[1]));
+        return simpleResponse(event, "Unit `" + args[1] + "` removed from board.");
+    }
 
     private Mono<Void> simpleResponse(MessageCreateEvent event, String message) {
         return response(event, message).then();
     }
     private Mono<Message> response(MessageCreateEvent event, String message) {
         return event.getMessage().getChannel().flatMap(messageChannel -> messageChannel.createMessage(message));
+    }
+    private Mono<Void> errUnitNotFound(MessageCreateEvent event, String unitName) {
+        return simpleResponse(event, "Unit `" + unitName + "` was not found.  Please check your spelling and try again.");
     }
 
 
@@ -248,6 +265,10 @@ public class GameMap {
             drawUnit(unit);
             return true;
         }
+    }
+    private void dropUnit(Unit unit) {
+        clearSquare(unit.x, unit.y);
+        unit.setPos(-1, -1);
     }
     private void clearSquare(int x, int y) {
         if (squareInBounds(x, y)) {

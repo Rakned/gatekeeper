@@ -36,6 +36,17 @@ public class Gatekeeper {
                 .flatMap(channel -> channel.createMessage("Blank map initialized for this channel."))
                 .then());
 
+        // lambda for commands that work regardless of active status
+        Command mapEvent = event -> event
+                .getMessage()
+                .getChannel()
+                .filter(channel -> activeMaps.containsKey(channel.getId()))
+                .map(channel -> activeMaps.get(channel.getId()))
+                .flatMap(map -> map.doSomething(event))
+                .then();
+
+        commands.put("help", mapEvent);
+
         // access lambda for nonfinal map
         Command mapSetEvent = event -> event
                 .getMessage()
@@ -52,7 +63,6 @@ public class Gatekeeper {
         // finalize the map and prepare it for play
         commands.put("complete", mapSetEvent);
 
-
         // access lambda for finalized map
         Command mapGameEvent = event -> event
                 .getMessage()
@@ -63,7 +73,6 @@ public class Gatekeeper {
                 .flatMap(map -> map.doSomething(event))
                 .then();
 
-
         // add units to existing map
         commands.put("addnew", mapGameEvent);
         //commands.put("addmany", mapGameEvent);
@@ -73,6 +82,7 @@ public class Gatekeeper {
 
         // move units onto/around board
         commands.put("move", mapGameEvent);
+        commands.put("remove", mapGameEvent);
         commands.put("view", mapGameEvent);
     }
 
