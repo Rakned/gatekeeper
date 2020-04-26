@@ -15,6 +15,20 @@ public class GameMap {
             SET_ERROR_BAD_INPUT_RESPONSE = "Sorry, but the value you provided was not within the attribute's bounds.  Please try again.",
             ERROR_PARSE_FAIL = "Trying to parse your arguments threw an error!  Are you sure they are in the correct format?";
 
+    // todo: state-specific help requests?
+    private static final String MESSAGE_HELP = "```\n" +
+            " === Setup Commands === \n" +
+            "\tAccess to these commands is restricted.\n" +
+            " === Gameplay Commands === \n" +
+            "g!addunit\n" +
+            "\tDESCRIPTION NOT SET\n" +
+            "g!checkunit\n" +
+            "\tDESCRIPTION NOT SET\n" +
+            " === Misc. Commands === \n" +
+            "g!help\n" +
+            "\tDisplays this helpful message.\n" +
+            "```";
+
 
     public Mono<Void> doSomething(MessageCreateEvent event) {
         String[] args = getArgs(event);
@@ -22,6 +36,11 @@ public class GameMap {
         if (args.length == 0) {
             return event.getMessage().getChannel().flatMap(channel ->
                     channel.createMessage("Error reading message content.")).then();
+        }
+
+        switch (args[0]) {
+            case "help":
+                return simpleResponse(event, MESSAGE_HELP);
         }
 
         // choose switch interface based on if the map is complete

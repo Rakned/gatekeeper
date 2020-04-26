@@ -51,8 +51,7 @@ public class Gatekeeper {
                 .flatMap(a->event.getMessage().getChannel())
                 .filter(channel -> activeMaps.containsKey(channel.getId()))
                 .map(channel -> activeMaps.get(channel.getId()))
-                .flatMap(map -> map.doSomething(event))
-                .then();
+                .flatMap(map -> map.doSomething(event));
 
         commands.put("help", mapEvent);
 
@@ -66,12 +65,10 @@ public class Gatekeeper {
                 .filter(channel -> activeMaps.containsKey(channel.getId()))
                 .map(channel -> activeMaps.get(channel.getId()))
                 .filter(GameMap::isNonFinal)
-                .flatMap(map -> map.doSomething(event))
-                .then();
+                .flatMap(map -> map.doSomething(event));
 
         // set map data (map, x, y, width, height, size, all)
         commands.put("set", mapSetEvent); // generic
-
         // finalize the map and prepare it for play
         commands.put("complete", mapSetEvent);
 
@@ -82,8 +79,7 @@ public class Gatekeeper {
                 .filter(channel -> activeMaps.containsKey(channel.getId()))
                 .map(channel -> activeMaps.get(channel.getId()))
                 .filter(GameMap::isFinal)
-                .flatMap(map -> map.doSomething(event))
-                .then();
+                .flatMap(map -> map.doSomething(event));
 
         // add units to existing map
         commands.put("addunit", mapGameEvent);
