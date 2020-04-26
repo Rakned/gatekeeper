@@ -308,7 +308,7 @@ public class GameMap {
     }
 
     private boolean moveUnit(Unit unit, int x, int y) {
-        if (spaceOccupation[x][y]) {
+        if (!squareInBounds(x, y) || spaceOccupation[x][y]) {
             return false;
         } else {
             clearSquare(unit.x, unit.y);

@@ -4,11 +4,14 @@ import discord4j.core.DiscordClient;
 import discord4j.core.DiscordClientBuilder;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.Entity;
+import discord4j.core.object.entity.Member;
+import discord4j.core.object.util.Permission;
 import discord4j.core.object.util.Snowflake;
 import org.parkers.gatekeep.gamedata.GameMap;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,8 +30,12 @@ public class Gatekeeper {
                 .then());
 
         // map creation command
-        commands.put("newmap", event -> event.getMessage()
-                .getChannel()
+        commands.put("newmap", event -> event
+                .getMessage()
+                .getAuthorAsMember()
+                .flatMap(Member::getBasePermissions)
+                .filter(perm -> perm.contains(Permission.ADMINISTRATOR))
+                .then(event.getMessage().getChannel())
                 .map(Entity::getId)
                 .filter(snowflake -> !activeMaps.containsKey(snowflake))
                 .doOnNext(snowflake -> activeMaps.put(snowflake, new GameMap()))
@@ -39,7 +46,10 @@ public class Gatekeeper {
         // lambda for commands that work regardless of active status
         Command mapEvent = event -> event
                 .getMessage()
-                .getChannel()
+                .getAuthorAsMember()
+                .flatMap(Member::getBasePermissions)
+                .filter(perm -> perm.contains(Permission.ADMINISTRATOR))
+                .then(event.getMessage().getChannel())
                 .filter(channel -> activeMaps.containsKey(channel.getId()))
                 .map(channel -> activeMaps.get(channel.getId()))
                 .flatMap(map -> map.doSomething(event))
@@ -50,7 +60,10 @@ public class Gatekeeper {
         // access lambda for nonfinal map
         Command mapSetEvent = event -> event
                 .getMessage()
-                .getChannel()
+                .getAuthorAsMember()
+                .flatMap(Member::getBasePermissions)
+                .filter(perm -> perm.contains(Permission.ADMINISTRATOR))
+                .then(event.getMessage().getChannel())
                 .filter(channel -> activeMaps.containsKey(channel.getId()))
                 .map(channel -> activeMaps.get(channel.getId()))
                 .filter(GameMap::isNonFinal)
@@ -107,4 +120,6 @@ public class Gatekeeper {
 
         client.logout();
     }
+
+
 }
