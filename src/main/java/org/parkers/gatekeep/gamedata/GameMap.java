@@ -45,7 +45,7 @@ public class GameMap {
     }
     private Mono<Void> doGameUpdate(MessageCreateEvent event, String[] args) {
         switch (args[0]) {
-            case "addnew":
+            case "addunit":
                 return addOneUnit(event, args);
 
             case "checkunit":
@@ -90,16 +90,67 @@ public class GameMap {
             }
         }
 
-        // todo implement
-        if (args[1].equalsIgnoreCase("all")) {
-            return simpleResponse(event, "unimplemented");
-        }
-
         if (args.length < 3) {
             return simpleResponse(event, SET_ERROR_BAD_ARG_COUNT_RESPONSE);
         }
 
-        int value = Integer.parseInt(args[2]);
+        // todo implement
+        if (args[1].equalsIgnoreCase("all")) {
+            int i = args.length;
+            int j = 0;
+            String reply = "";
+            if (i > 7) {
+                i = 7;
+            }
+
+            switch (i) {
+                case 7:
+                    i = getNum(args[6]);
+                    if (i > 0) {
+                        size = i;
+                        reply = "size set to `" + i + "`";
+                        j++;
+                    }
+                case 6:
+                    i = getNum(args[5]);
+                    if (i > 0) {
+                        height = i;
+                        reply = "grid height set to `" + i + "`\n" + reply;
+                        j++;
+                    }
+                case 5:
+                    i = getNum(args[4]);
+                    if (i > 0) {
+                        width = i;
+                        reply = "grid width set to `" + i + "`\n" + reply;
+                        j++;
+                    }
+                case 4:
+                    i = getNum(args[3]);
+                    if (i > 0) {
+                        uly = i;
+                        reply = "origin y set to `" + i + "`\n" + reply;
+                        j++;
+                    }
+                case 3:
+                    i = getNum(args[2]);
+                    if (i > 0) {
+                        ulx = i;
+                        reply = "origin x set to `" + i + "`\n" + reply;
+                        j++;
+                    }
+                    break;
+            }
+            if (setMap(event)) {
+                reply = "Map updated!\n\n" + reply;
+            } else if (j == 0) {
+                reply = "No valid update information found.";
+            }
+
+            return simpleResponse(event, reply);
+        }
+
+        int value = getNum(args[2]);
         if (value <= 0) {
             return simpleResponse(event, SET_ERROR_BAD_INPUT_RESPONSE);
         }
@@ -188,8 +239,8 @@ public class GameMap {
 
         int x, y;
         try {
-            x = Integer.parseInt(args[2]);
-            y = Integer.parseInt(args[3]);
+            x = getNum(args[2]);
+            y = getNum(args[3]);
         } catch (Exception e) {
             return simpleResponse(event, ERROR_PARSE_FAIL);
         }
@@ -301,5 +352,13 @@ public class GameMap {
     }
     private boolean squareInBounds(int x, int y) {
         return x >= 0 && y >= 0 && x < width && y < height;
+    }
+
+    private static int getNum(String str) {
+        int i = -1;
+        try {
+            i = Integer.parseInt(str);
+        } catch (Exception ignored) {}
+        return i;
     }
 }
