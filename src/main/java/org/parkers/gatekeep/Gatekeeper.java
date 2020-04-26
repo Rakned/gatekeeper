@@ -11,7 +11,6 @@ import org.parkers.gatekeep.gamedata.GameMap;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,11 +34,11 @@ public class Gatekeeper {
                 .getAuthorAsMember()
                 .flatMap(Member::getBasePermissions)
                 .filter(perm -> perm.contains(Permission.ADMINISTRATOR))
-                .then(event.getMessage().getChannel())
+                .flatMap(a->event.getMessage().getChannel())
                 .map(Entity::getId)
                 .filter(snowflake -> !activeMaps.containsKey(snowflake))
                 .doOnNext(snowflake -> activeMaps.put(snowflake, new GameMap()))
-                .then(event.getMessage().getChannel())
+                .flatMap(a->event.getMessage().getChannel())
                 .flatMap(channel -> channel.createMessage("Blank map initialized for this channel."))
                 .then());
 
@@ -49,7 +48,7 @@ public class Gatekeeper {
                 .getAuthorAsMember()
                 .flatMap(Member::getBasePermissions)
                 .filter(perm -> perm.contains(Permission.ADMINISTRATOR))
-                .then(event.getMessage().getChannel())
+                .flatMap(a->event.getMessage().getChannel())
                 .filter(channel -> activeMaps.containsKey(channel.getId()))
                 .map(channel -> activeMaps.get(channel.getId()))
                 .flatMap(map -> map.doSomething(event))
@@ -63,7 +62,7 @@ public class Gatekeeper {
                 .getAuthorAsMember()
                 .flatMap(Member::getBasePermissions)
                 .filter(perm -> perm.contains(Permission.ADMINISTRATOR))
-                .then(event.getMessage().getChannel())
+                .flatMap(a->event.getMessage().getChannel())
                 .filter(channel -> activeMaps.containsKey(channel.getId()))
                 .map(channel -> activeMaps.get(channel.getId()))
                 .filter(GameMap::isNonFinal)
