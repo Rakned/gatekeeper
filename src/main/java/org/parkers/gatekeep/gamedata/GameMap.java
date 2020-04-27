@@ -16,7 +16,7 @@ public class GameMap {
             ERROR_PARSE_FAIL = "Trying to parse your arguments threw an error!  Are you sure they are in the correct format?";
 
     // todo: state-specific help requests?
-    private static final String MESSAGE_HELP = "```\n" +
+    public static final String MESSAGE_HELP = "```\n" +
             " === Setup Commands === \n" +
                 "\tAccess to these commands is restricted.\n" +
             "\n === Gameplay Commands === \n\n" +

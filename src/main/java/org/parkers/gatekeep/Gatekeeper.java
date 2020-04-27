@@ -53,7 +53,11 @@ public class Gatekeeper {
                 .map(channel -> activeMaps.get(channel.getId()))
                 .flatMap(map -> map.doSomething(event));
 
-        commands.put("help", mapEvent);
+        commands.put("help", event -> event
+                .getMessage()
+                .getChannel()
+                .flatMap(channel -> channel.createMessage(GameMap.MESSAGE_HELP))
+                .then());
 
         // access lambda for nonfinal map
         Command mapSetEvent = event -> event
