@@ -18,15 +18,22 @@ public class GameMap {
     // todo: state-specific help requests?
     private static final String MESSAGE_HELP = "```\n" +
             " === Setup Commands === \n" +
-            "\tAccess to these commands is restricted.\n" +
-            " === Gameplay Commands === \n" +
-            "g!addunit\n" +
-            "\tDESCRIPTION NOT SET\n" +
-            "g!checkunit\n" +
-            "\tDESCRIPTION NOT SET\n" +
-            " === Misc. Commands === \n" +
+                "\tAccess to these commands is restricted.\n" +
+            "\n === Gameplay Commands === \n\n" +
+            "g!addunit <unitname>\n" +
+                "\tREQUIRES AN ATTACHED FILE.\n" +
+                "\tAttempts to create a unit under the given name, using the provided file as a portrait.\n" +
+            "g!checkunit <unitname>\n" +
+                "\tProvides information on the unit under the given name, assuming it exists.\n" +
+            "g!move <unitname> <x> <y>\n" +
+                "\tAttempts to move the named unit to the designated square on the board.\n" +
+                "\tCannot move a unit into a space that is already occupied, or to any space outside the boundaries of the play area.\n" +
+            "g!remove <unitname>\n" +
+                "\tRemoves the indicated unit from play.\n" +
+                "\tNote that the unit has not actually been deleted, and can be easily returned to the board with a simple \"move\" command.\n" +
+            "\n === Misc. Commands === \n\n" +
             "g!help\n" +
-            "\tDisplays this helpful message.\n" +
+                "\tDisplays this helpful message.\n" +
             "```";
 
 
