@@ -34,11 +34,11 @@ public class Gatekeeper {
                 .getAuthorAsMember()
                 .flatMap(Member::getBasePermissions)
                 .filter(perm -> perm.contains(Permission.ADMINISTRATOR))
-                .flatMap(a->event.getMessage().getChannel())
+                .flatMap(a-> event.getMessage().getChannel())
                 .map(Entity::getId)
                 .filter(snowflake -> !activeMaps.containsKey(snowflake))
                 .doOnNext(snowflake -> activeMaps.put(snowflake, new GameMap()))
-                .flatMap(a->event.getMessage().getChannel())
+                .flatMap(a-> event.getMessage().getChannel())
                 .flatMap(channel -> channel.createMessage("Blank map initialized for this channel."))
                 .then());
 
