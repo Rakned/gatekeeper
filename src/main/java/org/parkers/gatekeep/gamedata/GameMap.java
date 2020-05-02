@@ -38,7 +38,7 @@ public class GameMap {
                 "\tDisplays this helpful message.\n" +
             "```";
 
-
+    // todo: reorganize methods!
     public Mono<Void> doSomething(MessageCreateEvent event) {
         String[] args = getArgs(event);
 
@@ -220,7 +220,7 @@ public class GameMap {
         return false;
     }
 
-    private Snowflake getID(MessageCreateEvent event) {
+    private static Snowflake getID(MessageCreateEvent event) {
         return event.getMessage().getAuthor().map(User::getId).orElse(null);
     }
 
