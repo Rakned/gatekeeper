@@ -42,17 +42,6 @@ public class Gatekeeper {
                 .flatMap(channel -> channel.createMessage("Blank map initialized for this channel."))
                 .then());
 
-        // lambda for commands that work regardless of active status
-        Command mapEvent = event -> event
-                .getMessage()
-                .getAuthorAsMember()
-                .flatMap(Member::getBasePermissions)
-                .filter(perm -> perm.contains(Permission.ADMINISTRATOR))
-                .flatMap(a-> event.getMessage().getChannel())
-                .filter(channel -> activeMaps.containsKey(channel.getId()))
-                .map(channel -> activeMaps.get(channel.getId()))
-                .flatMap(map -> map.doSomething(event));
-
         commands.put("help", event -> event
                 .getMessage()
                 .getChannel()
