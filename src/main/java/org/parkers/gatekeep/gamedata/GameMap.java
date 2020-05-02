@@ -2,6 +2,8 @@ package org.parkers.gatekeep.gamedata;
 
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.Message;
+import discord4j.core.object.entity.User;
+import discord4j.core.object.util.Snowflake;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
@@ -218,6 +220,10 @@ public class GameMap {
         return false;
     }
 
+    private Snowflake getID(MessageCreateEvent event) {
+        return event.getMessage().getAuthor().map(User::getId).orElse(null);
+    }
+
     private Mono<Void> addOneUnit(MessageCreateEvent event, String[] args) {
         if (args.length != 2) {
             return simpleResponse(event, "Message must include a single-token name for your unit.");
@@ -264,17 +270,19 @@ public class GameMap {
         }
 
         int x, y;
-        try {
-            x = getNum(args[2]);
-            y = getNum(args[3]);
-        } catch (Exception e) {
-            return simpleResponse(event, ERROR_PARSE_FAIL);
+        x = getNum(args[2]);
+        y = getNum(args[3]);
+
+        Unit unit = units.get(args[1]);
+
+        if (!unit.isUser(getID(event))) {
+            return simpleResponse(event, "That unit does not belong to you.");
         }
 
         if (moveUnit(units.get(args[1]), x, y)) {
             return simpleResponse(event, "Unit moved successfully!");
         } else {
-            return simpleResponse(event, "Unit could not be moved...");
+            return simpleResponse(event, "The unit could not be moved...  Either the space you indicated is already occupied, or it is outside the map's bounds.");
         }
     }
     private Mono<Void> removeUnit(MessageCreateEvent event, String[] args) {
