@@ -7,15 +7,10 @@ class Unit {
     int x, y;
     private Snowflake user;
 
-    Unit(MyImage image, int tsize) {
+    Unit(MyImage image, int tsize, Snowflake owner) {
         x = -1;
         y = -1;
-
         portrait = image.copyResize(tsize);
-    }
-
-    Unit(MyImage image, int tsize, Snowflake owner) {
-        this(image, tsize);
         user = owner;
     }
 
