@@ -48,7 +48,7 @@ public class Gatekeeper {
                 .getAuthorAsMember()
                 .flatMap(Member::getBasePermissions)
                 .filter(perm -> perm.contains(Permission.ADMINISTRATOR))
-                .flatMap(a->event.getMessage().getChannel())
+                .flatMap(a-> event.getMessage().getChannel())
                 .filter(channel -> activeMaps.containsKey(channel.getId()))
                 .map(channel -> activeMaps.get(channel.getId()))
                 .flatMap(map -> map.doSomething(event));
@@ -65,7 +65,7 @@ public class Gatekeeper {
                 .getAuthorAsMember()
                 .flatMap(Member::getBasePermissions)
                 .filter(perm -> perm.contains(Permission.ADMINISTRATOR))
-                .flatMap(a->event.getMessage().getChannel())
+                .flatMap(a-> event.getMessage().getChannel())
                 .filter(channel -> activeMaps.containsKey(channel.getId()))
                 .map(channel -> activeMaps.get(channel.getId()))
                 .filter(GameMap::isNonFinal)
