@@ -238,7 +238,7 @@ public class GameMap {
             return simpleResponse(event, "I could not find an image attached to your request.  Please try again.");
         }
 
-        units.put(args[1], new Unit(image, size));
+        units.put(args[1], new Unit(image, size, getID(event)));
         return simpleResponse(event, "Successfully created unit `" + args[1] + "`.");
     }
     private Mono<Void> unitCheck(MessageCreateEvent event, String[] args) {
